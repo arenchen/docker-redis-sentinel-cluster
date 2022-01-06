@@ -1,0 +1,70 @@
+version: "3"
+services:
+  redis:
+    container_name: redis
+    image: redis:alpine
+    volumes:
+      - redis-data:/data
+  redis-02:
+    container_name: redis-02
+    image: redis:alpine
+    command: redis-server --slaveof redis 6379
+    volumes:
+      - redis-02-data:/data
+    depends_on:
+      - redis
+  redis-03:
+    container_name: redis-03
+    image: redis:alpine
+    command: redis-server --slaveof redis 6379
+    volumes:
+      - redis-03-data:/data
+    depends_on:
+      - redis
+  redis-sentinel:
+    container_name: redis-sentinel
+    build: sentinel
+    image: netcorext/redis-sentinel:latest
+    depends_on:
+      - redis
+      - redis-02
+      - redis-03
+  redis-sentinel-02:
+    container_name: redis-sentinel-02
+    build: sentinel
+    image: netcorext/redis-sentinel:latest
+    depends_on:
+      - redis
+      - redis-02
+      - redis-03
+  redis-sentinel-03:
+    container_name: redis-sentinel-03
+    build: sentinel
+    image: netcorext/redis-sentinel:latest
+    depends_on:
+      - redis
+      - redis-02
+      - redis-03
+volumes:
+  redis-data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ~/DockerVolumes/redis/redis/data
+  redis-02-data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ~/DockerVolumes/redis/redis-02/data
+  redis-03-data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ~/DockerVolumes/redis/redis-03/data
+networks:
+  default:
+    external:
+      name: network-dev

@@ -1,0 +1,7 @@
+FROM redis:alpine
+
+ARG CONF=redis-sentinel.conf
+
+COPY $CONF /etc/redis/redis-sentinel.conf
+
+ENTRYPOINT redis-server /etc/redis/redis-sentinel.conf --sentinel

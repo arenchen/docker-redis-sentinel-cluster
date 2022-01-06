@@ -1,0 +1,133 @@
+version: "3"
+services:
+  redis:
+    container_name: redis
+    build: cluster
+    image: netcorext/redis-cluster:latest
+    volumes:
+      - redis-data:/data
+  redis-02:
+    container_name: redis-02
+    build: cluster
+    image: netcorext/redis-cluster:latest
+    volumes:
+      - redis-02-data:/data
+  redis-03:
+    container_name: redis-03
+    build: cluster
+    image: netcorext/redis-cluster:latest
+    volumes:
+      - redis-03-data:/data
+  redis-slave:
+    container_name: redis-slave
+    build: cluster
+    image: netcorext/redis-cluster:latest
+    command: redis-server --slaveof redis 6379
+    volumes:
+      - redis-slave-data:/data
+    depends_on:
+      - redis
+  redis-slave-02:
+    container_name: redis-slave-02
+    build: cluster
+    image: netcorext/redis-cluster:latest
+    command: redis-server --slaveof redis-02 6379
+    volumes:
+      - redis-slave-02-data:/data
+    depends_on:
+      - redis-02
+
+  redis-slave-03:
+    container_name: redis-slave-03
+    build: cluster
+    image: netcorext/redis-cluster:latest
+    command: redis-server --slaveof redis-03 6379
+    volumes:
+      - redis-slave-03-data:/data
+    depends_on:
+      - redis-03
+  redis-sentinel:
+    container_name: redis-sentinel
+    build:
+      context: sentinel
+      args:
+        - CONF=redis-sentinel-cluster.conf
+    image: netcorext/redis-sentinel-cluster:alpine
+    depends_on:
+      - redis
+      - redis-02
+      - redis-03
+      - redis-slave
+      - redis-slave-02
+      - redis-slave-03
+  redis-sentinel-02:
+    container_name: redis-sentinel-02
+    build:
+      context: sentinel
+      args:
+        - CONF=redis-sentinel-cluster.conf
+    image: netcorext/redis-sentinel-cluster:alpine
+    depends_on:
+      - redis
+      - redis-02
+      - redis-03
+      - redis-slave
+      - redis-slave-02
+      - redis-slave-03
+  redis-sentinel-03:
+    container_name: redis-sentinel-03
+    build:
+      context: sentinel
+      args:
+        - CONF=redis-sentinel-cluster.conf
+    image: netcorext/redis-sentinel-cluster:alpine
+    depends_on:
+      - redis
+      - redis-02
+      - redis-03
+      - redis-slave
+      - redis-slave-02
+      - redis-slave-03
+
+volumes:
+  redis-data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ~/DockerVolumes/redis/redis/data
+  redis-02-data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ~/DockerVolumes/redis/redis-02/data
+  redis-03-data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ~/DockerVolumes/redis/redis-03/data
+  redis-slave-data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ~/DockerVolumes/redis/redis-slave/data
+  redis-slave-02-data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ~/DockerVolumes/redis/redis-slave-02/data
+  redis-slave-03-data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ~/DockerVolumes/redis/redis-slave-03/data
+
+networks:
+  default:
+    external:
+      name: network-dev
